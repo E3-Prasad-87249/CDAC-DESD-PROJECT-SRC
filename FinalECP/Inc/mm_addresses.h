@@ -1,0 +1,43 @@
+/*
+ * mm_addresses.h
+ *
+ *  Created on: Feb 5, 2025
+ *      Author: sunbeam
+ */
+
+#ifndef MM_ADDRESSES_H_
+#define MM_ADDRESSES_H_
+
+//uint32_t AHB1_BASE_ADDR = 0x4002 0000;
+//const uint32_t RCC_BASE_ADDR = 0x40023800;
+#define RCC_BASE_ADDR (0x40023800UL)
+//const uint32_t RCC_AHB1ENR_ADDR = 0x40023830; // RCC_BASE_ADDR + AHB1ENR Address Offset: 0x30
+const uint8_t AHB1ENR_OFFSET = 0x30;
+const uint32_t RCC_AHB1ENR_ADDR = RCC_BASE_ADDR+AHB1ENR_OFFSET;
+/*
+const uint32_t GPIOA_BASE_ADDR = 0x40020000; // = AHB1_BASE_ADDR;
+const uint32_t GPIOD_BASE_ADDR = 0x40020C00;
+
+const uint32_t GPIOA_MODER_ADDR = 0x40020000; // GPIOA_BASE_ADDR + GPIOA_MODER Offset (0x00)
+const uint32_t GPIOA_IDR_ADDR = 0x40020010;	// GPIOA_BASE_ADDR + GPIOA_IDR Offset (0x10)
+
+const uint32_t GPIOD_MODER_ADDR = 0x40020C00;	// GPIOD_MODER_ADDR + GPIOD_MODER Offset (0x00)
+const uint32_t GPIOD_ODR_ADDR = 0x40020C14;   // GPIOD_ODR_ADDR + GPIOD_ODR offset (0x14)
+*/
+
+#define GPIOA_BASE_ADDR 	(0x40020000UL)
+#define GPIOD_BASE_ADDR 	(0x40020C00UL)
+
+#define GPIOx_MODER_OFFSET  0x00
+#define GPIOx_IDR_OFFSET  	0x10
+#define GPIOx_ODR_OFFSET  	0x14
+
+#define GPIOA_MODER_ADDR	(GPIOA_BASE_ADDR+GPIOx_MODER_OFFSET)
+#define GPIOD_MODER_ADDR	(GPIOD_BASE_ADDR+GPIOx_MODER_OFFSET)
+#define GPIOA_IDR_ADDR		(GPIOA_BASE_ADDR + GPIOx_IDR_OFFSET)
+#define GPIOD_ODR_ADDR		(GPIOD_BASE_ADDR + GPIOx_ODR_OFFSET)
+/*
+#include "rcc.h"
+#include "gpio.h"
+*/
+#endif /* MM_ADDRESSES_H_ */
