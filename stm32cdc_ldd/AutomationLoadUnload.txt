@@ -1,0 +1,80 @@
+To ensure your custom Linux USB driver for a CDC class device is automatically loaded when the device is connected, 
+and ideally unloaded when it's removed, you need to use a combination of:
+
+1. 
+   optional: blacklist the corresponding inbuilt driver to avoild cliaming the device as
+    echo "blacklist cdc_acm" | sudo tee /etc/modprobe.d/blacklist-cdc-acm.conf
+    reboot
+
+2. Inside your driver source, register a usb_device_id table that matches your device’s VID:PID.
+   *This makes the driver eligible for automatic loading by udev/modprobe
+e.g. 
+        #define VENDOR_ID  0x0483  // STMicroelectronics
+        #define PRODUCT_ID 0x5740  // Virtual COM Port
+
+        static const struct usb_device_id cdc_table[] = {
+            { USB_DEVICE(VENDOR_ID, PRODUCT_ID) },
+            { }  // Terminating entry
+        };
+        MODULE_DEVICE_TABLE(usb, cdc_table);
+
+3. install the driver(.ko) file in kernel modules dir and update module dependency files as follow:
+        sudo cp myusbdriver.ko /lib/modules/$(uname -r)/kernel/drivers/usb/stm32cdc_driver.ko
+        sudo depmod
+    *This should create modprobe alias in modules.alias file 
+    Verify it as: grep 0483 /lib/modules/$(uname -r)/modules.alias
+    This should show something like: alias usb:v0483p5740d* stm32cdc_driver
+    *If this alias exists, Linux will auto-load your driver when the matching USB device is plugged.
+
+*Linux does not automatically unload kernel modules when devices are unplugged by default. But you have options:
+1. manual: sudo rmmod stm32cdc or sudo modprobe -r stm32cdc_driver (do cleanup via disconnect)
+
+Manual removal via udev rule (not recommended for kernel drivers): 
+-> When USB device with VID:PID is unplugged, udev will run a script to rmmod your driver (e.g., stm32cdc_driver).
+1. create a shell script to unload module as: /usr/local/bin/remove_my_driver.sh with executable permission and content as    
+
+        #!/bin/bash
+
+        MODULE="stm32cdc_driver"
+
+        # Check if module is loaded
+        if lsmod | grep -q "^$MODULE"; then
+            # Try to remove the module
+            /sbin/rmmod $MODULE
+            logger "udev: Removed $MODULE via remove_my_driver.sh"
+        fi
+sudo chmod +x /usr/local/bin/remove_my_driver.sh
+
+2. Create a udev Rule for USB Device Removal as: sudo nano /etc/udev/rules.d/99-myusb-unload.rules with following content
+
+    SUBSYSTEM=="usb", ACTION=="remove", ATTR{idVendor}=="0483", ATTR{idProduct}=="5740", RUN+="/usr/local/bin/remove_my_driver.sh"
+
+3. reload udev rules as: sudo udevadm control --reload-rules
+
+
+Check kernel logs: dmesg | tail
+Check system logs: journalctl -xe | grep udev
+
+
+echo "a" | sudo tee /dev/stm32cdc 
+A/a = GREEN LED is ON/OFF
+B/b = SAME for ORANGE LED
+C/c = SAME for RED LED
+D/d = SAME for BLUE LED
+
+echo "r" | sudo tee /dev/stm32cdc &&  echo "r" | sudo tee /dev/stm32cdc (RESET)
+echo "1" | sudo tee /dev/stm32cdc && sudo cat /dev/stm32cdc
+1 = status of GREEN LED
+2 = status of ORANGE LED
+3 = status of RED LED
+4 = status of BLUE LED 
+
+
+
+
+
+
+
+
+
+
